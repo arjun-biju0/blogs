@@ -2,8 +2,10 @@ const express=require('express');
 const mongoose=require('mongoose');
 const cors=require('cors');
 const dotenv=require('dotenv');
+const jwt= require('jsonwebtoken');
 const { User } = require('./models/UserModel');
 const { Blog } = require('./models/BlogModel');
+const verifyToken = require('./middlewares/jwtVerify');
 
 const app=express();
 
@@ -50,20 +52,28 @@ app.post('/login',async(req,res)=>{
         return res.status(400).send({message:"user does not exist"})
     }
     if(user.password===password){
-        return res.status(200).json({message:"login successful"})
+        const token= jwt.sign({
+            username:username
+        },
+        process.env.JWT_SECRET,
+        {'expiresIn':'1d'}
+        )
+        return res.status(200).send({message:"login successful", token})
     }    
-    res.send(400).json({message:"wrong password"})
+    
+    res.send(400).send({message:"wrong password"})
     
 })
 
-app.post('/addBlog',async (req,res)=>{
-    console.log(req.body);
+app.post('/addBlog',verifyToken, async (req,res)=>{
     const {title,content}=req.body
-
+    console.log(req.user.username);
+    
     try {
         const blog= new Blog({
             title:title,
-            content:content
+            content:content,
+            username:req.user.username
         })
         await blog.save()
         res.json({message:"Data saved successfully"})
@@ -77,12 +87,26 @@ app.post('/addBlog',async (req,res)=>{
 app.get('/getAllBlogs', async(req,res)=>{
     try {
         const result= await Blog.find();
+        console.log(result);
+        
         res.status(200).json({blogs:result})
         
     } catch (error) {
         console.error(error);
         res.status(500).json({success:false,error:error.message})
     }
+})
+
+app.get('/getUserBlogs',verifyToken, async(req,res)=>{
+    console.log(req.user);
+    try {
+        const blogs= Blog.find({username:req.user.username})
+        console.log(blogs);
+        
+    } catch (error) {
+        
+    }
+    
 })
 
 app.post('/editBlog', async(req,res)=>{

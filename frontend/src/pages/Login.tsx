@@ -14,7 +14,7 @@ const Login = () => {
     if(result.status===200){
         localStorage.setItem('token', result.data.token)
         navigate('/dashboard')
-        // console.log("success");
+        console.log(result.data.token);
         
     }
     console.log(result.data);

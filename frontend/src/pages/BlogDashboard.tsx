@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Navbar from "../components/Navbar";
 import axios from "axios";
 
@@ -7,6 +7,19 @@ function BlogDashboard() {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [editingIndex, setEditingIndex] = useState(null);
+
+  useEffect(()=>{
+    const getUserBlogs=async()=>{
+        const token=localStorage.getItem('token')
+        axios.get('http://localhost:3000/getUserBlogs',{
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        })
+    }
+    getUserBlogs()
+  },[])
+  
 
   const handleSubmit = (e:any) => {
     e.preventDefault();
@@ -18,7 +31,12 @@ function BlogDashboard() {
     } else {
       setPosts([...posts, { title, content }]);
     }
-    axios.post('http://localhost:3000/addBlog',{title,content})
+    const token=localStorage.getItem('token')
+    axios.post('http://localhost:3000/addBlog',{title,content},{
+        headers: {
+            Authorization: `Bearer ${token}`
+        }
+    })
     setTitle("");
     setContent("");
   };
@@ -34,7 +52,7 @@ function BlogDashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 p-6">
+    <div className="min-h-screen bg-gray-100 ">
         <Navbar/>
       <div className="max-w-2xl mx-auto bg-white p-6 rounded-lg shadow-md">
         <h2 className="text-xl font-bold mb-4">Blog Dashboard</h2>
